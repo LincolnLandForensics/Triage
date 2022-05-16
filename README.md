@@ -9,6 +9,8 @@ Hostname, user domain, email, current user, timezone,  system model, logon serve
 The output file also records the command that was used to capture the information for posterity's sake.
 Running as admin is preferred but not required.
 
+This grabs SAM and SYSTEM for password cracking. Group policies can alert on "Credential harvesting" in an Enterprise environment. Replace your domain name for the sample one (ILLINOIS) if you want to skip this step on an your enterpise system.
+
 Steps: 
 1. R.click the script and select "run as administrator"
 
