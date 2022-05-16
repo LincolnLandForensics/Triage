@@ -1,5 +1,5 @@
 @echo off
-rem version 1.0.4
+rem version 1.0.5
 
 rem this will triage a windows PC (run as administrator, if you can)
 
@@ -128,6 +128,14 @@ echo ======== Done! Files are located in your working directory. ========
 echo ======== The End ======== >> _TRIAGE__%computername%.txt
 echo EndTime:                  >>_TRIAGE__%computername%.txt
 powershell invoke-command -scr {(get-date -format "{MMM-dd-yyyy HH:mm:ss})} >>_TRIAGE__%computername%.txt
+
+
+echo.
+echo see _TRIAGE__%computername%.txt for output
+
+pause
+
+
 
 REM # <<<<<<<<<<<<<<<<<<<<<<<<<<      Copyright        >>>>>>>>>>>>>>>>>>>>>>>>>>
 
