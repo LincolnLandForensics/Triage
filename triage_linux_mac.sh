@@ -1,5 +1,5 @@
 #!/bin/bash
-# version 1.0.2
+# version 1.0.3
 
 echo "<======== TRIAGE INFORMATION ========>" >TRIAGE__$(hostname).txt
 echo "<======== TRIAGE INFORMATION ========>"
@@ -16,7 +16,7 @@ hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'
 # MAC OS
 # echo "<======== sw_vers ========>" >> TRIAGE__$(hostname).txt
 sw_vers >>TRIAGE__$(hostname).txt
-f
+
 # echo OS Name:              $(uname -a) >>TRIAGE__$(hostname).txt
 # echo OS Name:              $(uname -a)
 
@@ -137,7 +137,7 @@ echo "<======== The End ========>" >> TRIAGE__$(hostname).txt
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<      Copyright        >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-# Copyright (C) 2022 LincolLandForensics
+# Copyright (C) 2022 LincolnLandForensics
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2, as published by the

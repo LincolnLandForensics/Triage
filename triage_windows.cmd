@@ -1,5 +1,5 @@
 @echo off
-rem version 1.0.5
+rem version 1.0.6
 
 rem this will triage a windows PC (run as administrator, if you can)
 
@@ -139,7 +139,7 @@ pause
 
 REM # <<<<<<<<<<<<<<<<<<<<<<<<<<      Copyright        >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-REM # Copyright (C) 2022 LincolLandForensics
+REM # Copyright (C) 2022 LincolnLandForensics
 REM #
 REM # This program is free software; you can redistribute it and/or modify it under
 REM # the terms of the GNU General Public License version 2, as published by the
