@@ -1,5 +1,5 @@
 @echo off
-rem version 1.0.6
+rem version 1.0.9
 
 rem this will triage a windows PC (run as administrator, if you can)
 
@@ -14,8 +14,8 @@ echo. >>_TRIAGE__%computername%.txt
 echo Host Name:                 %computername% >>_TRIAGE__%computername%.txt
 echo Host Name:                 %computername%
 echo UserDomain:                %UserDomain% >>_TRIAGE__%computername%.txt
-echo Current User:              %username% >>_TRIAGE__%computername%.txt
-echo Current User:              %username%
+echo Currentuser:              %username% >>_TRIAGE__%computername%.txt
+echo Currentuser:              %username%
 echo Email:                     %email% >>_TRIAGE__%computername%.txt
 
 rem determine Timezone
@@ -42,16 +42,16 @@ echo OneDrive:                  %OneDrive% >>_TRIAGE__%computername%.txt
 echo ======== powershell invoke-command -scr {(get-ciminstance -classname win32_logicaldisk)} >>_TRIAGE__%computername%.txt
 powershell invoke-command -scr {(get-ciminstance -classname win32_logicaldisk)} >>_TRIAGE__%computername%.txt
 
-
 echo ======== net share ======== >>_TRIAGE__%computername%.txt
-net share >>_TRIAGE__%computername%.txt
-
+wmic share get Caption, Description, Name, Path, Status >>_TRIAGE__%computername%.txt
+wmic share get Caption, Description, Name, Path, Status
 
 rem this requires administrator access
 echo ======== powershell invoke-command -scr {(Get-BitLockerVolume)} >>_TRIAGE__%computername%.txt
 powershell invoke-command -scr {(Get-BitLockerVolume)} >>_TRIAGE__%computername%.txt
 powershell invoke-command -scr {(Get-BitLockerVolume)}
 
+rem Backup BitLocker Recovery Key in Command Prompt
 echo ======== manage-bde -protectors -get c: ======== >>_TRIAGE__%computername%.txt
 rem  grab bitlocker recovery key for each drive (or at least c-f)
 manage-bde -protectors -get c:  >>_TRIAGE__%computername%.txt
@@ -86,8 +86,9 @@ ipconfig | find "IPv" | find ":" >>_TRIAGE__%computername%.txt
 
 
 echo ======== net user ======== >>_TRIAGE__%computername%.txt
-net user | find "command completed" /v >>_TRIAGE__%computername%.txt
-net user | find "command completed" /v
+wmic useraccount get Disabled,FullName,Name,PasswordRequired,SID >>_TRIAGE__%computername%.txt
+wmic useraccount get Disabled,FullName,Name,PasswordRequired,SID
+rem net user | find "command completed" /v
 
 echo ======== net localgroup administrators ======== >>_TRIAGE__%computername%.txt
 
@@ -120,9 +121,16 @@ powershell invoke-command -scr {(Get-History)} >>_TRIAGE__%computername%.txt
 
 rem this will light up an incident response alert as "credential dumping"
 rem this will skip this task if you are in the illinois domain
-if %UserDomain% == ILLINOIS (echo ILLINOIS) else (reg save hklm\sam sam_%computername%)
-if %UserDomain% == ILLINOIS (echo ILLINOIS) else (reg save hklm\system system_%computername%)
+if %UserDomain% == ILLINOIS (echo ILLINOIS) else (reg save hklm\sam SAM_%computername%)
+if %UserDomain% == ILLINOIS (echo ILLINOIS) else (reg save hklm\system SYSTEM_%computername%)
 
+
+
+rem How well patched is the system?
+rem wmic qfe get Caption,Description,HotFixID,InstalledOn
+
+rem copy a setup file with plaintext passwords if it exists
+IF EXIST C:\Windows\Panther\Unattend\Unattend.xml COPY C:\Windows\Panther\Unattend\Unattend.xml Unattend__%computername%.xml
 
 echo ======== Done! Files are located in your working directory. ======== 
 echo ======== The End ======== >> _TRIAGE__%computername%.txt
@@ -133,13 +141,20 @@ powershell invoke-command -scr {(get-date -format "{MMM-dd-yyyy HH:mm:ss})} >>_T
 echo.
 echo see _TRIAGE__%computername%.txt for output
 
+echo ======== netsh wlan export profile key=clear folder=. ======== 
+netsh wlan export profile key=clear folder=.
+echo see WIFI-*.xml for Wifi profiles
+
 pause
 
 
+REM # <<<<<<<<<<<<<<<<<<<<<<<<<<      Future Wishlist        >>>>>>>>>>>>>>>>>>>>>>>>>>
+rem powershell to grab Chrome saved credentials
+https://sushant747.gitbooks.io/total-oscp-guide/content/privilege_escalation_windows.html
 
 REM # <<<<<<<<<<<<<<<<<<<<<<<<<<      Copyright        >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-REM # Copyright (C) 2022 LincolnLandForensics
+REM # Copyright (C) 2022 LincolLandForensics
 REM #
 REM # This program is free software; you can redistribute it and/or modify it under
 REM # the terms of the GNU General Public License version 2, as published by the
@@ -149,5 +164,4 @@ REM # This program is distributed in the hope that it will be useful, but WITHOU
 REM # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 REM # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 REM # details (http://www.gnu.org/licenses/gpl.txt).
-
 
