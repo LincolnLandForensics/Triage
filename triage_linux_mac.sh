@@ -1,131 +1,285 @@
 #!/bin/bash
-# version 1.0.3
+# version 1.0.6
+
+# output_dir="$(pwd)"
+
+triage_file="TRIAGE__$(hostname).txt"
+
+# Create the triage_file
+touch "$triage_file"
+
+echo "TriageStartTime:  " $(date) >"$triage_file"
+echo >> "$triage_file"
+
+is_linux() {
+    # Check if the operating system is Linux
+    if [ "$(uname -s)" = "Linux" ]; then
+        return 0  # Return 0 for true
+    else
+        return 1  # Return 1 for false
+    fi
+}
+
+is_mac() {
+    # Check if the operating system is macOS (Darwin)
+    if [ "$(uname -s)" = "Darwin" ]; then
+        return 0  # Return 0 for true
+    else
+        return 1  # Return 1 for false
+    fi
+}
+
+
+# this functions from : https://github.com/vm32/Digital-Forensics-Script-for-Linux
+write_output() {
+    command=$1
+    filename=$2
+    echo >> "$triage_file"
+    echo "<========   $command ========>" >>"$triage_file"
+    if $command >> "$triage_file" 2>&1; then
+    # if $command > "$output_dir/$filename" 2>&1; then
+
+        echo >> "$triage_file"
+    # else
+        # echo >> "$triage_file"
+    fi
+}
 
 echo "<======== TRIAGE INFORMATION ========>" >TRIAGE__$(hostname).txt
 echo "<======== TRIAGE INFORMATION ========>"
 
-echo. >>TRIAGE__$(hostname).txt
-echo "StartTime:                " $(date) >> TRIAGE__$(hostname).txt
+echo >>TRIAGE__$(hostname).txt
+echo "TriageTime:                " $(date) >> TRIAGE__$(hostname).txt
+echo "CurrentUnixTime:           " $(date +%s) >> TRIAGE__$(hostname).txt
+echo "Host Name:                 " $(hostname) >>TRIAGE__$(hostname).txt
+echo "Host Name:                 " $(hostname)
+echo "Current User:              " $(whoami) >>TRIAGE__$(hostname).txt
+echo "Current User:              " $(whoami)
+echo "Users:                     " $(users) >>TRIAGE__$(hostname).txt
+echo "Timezone:                  " $(cat /etc/timezone)
+echo "Timezone:                  " $(cat /etc/timezone) >>TRIAGE__$(hostname).txt
+echo "Uptime:                    " $(uptime -p) >>TRIAGE__$(hostname).txt
+echo "SystemStartupTime:         " $(uptime -s) >>TRIAGE__$(hostname).txt
 
-echo "Host Name:                " $(hostname) >>TRIAGE__$(hostname).txt
-echo "Host Name:                " $(hostname)
 
-hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g' >>TRIAGE__$(hostname).txt
-hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'
+
+# OS detection
+if is_linux; then
+    echo "OS System:                  Linux"
+	write_output "hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'" "$triage_file"
+	# hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g' >>TRIAGE__$(hostname).txt
+	hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'
+
+elif is_mac; then
+    echo "OS System:                  macOS."
+	write_output "sw_vers" "$triage_file"
+else
+    echo "The system is not running Linux or macOS."
+fi
 
 # MAC OS
 # echo "<======== sw_vers ========>" >> TRIAGE__$(hostname).txt
-sw_vers >>TRIAGE__$(hostname).txt
+# sw_vers >>TRIAGE__$(hostname).txt
+# write_output "sw_vers" "$triage_file"
 
-# echo OS Name:              $(uname -a) >>TRIAGE__$(hostname).txt
-# echo OS Name:              $(uname -a)
 
-echo Current User:              $(whoami) >>TRIAGE__$(hostname).txt
-echo Current User:              $(whoami)
-
-echo Users:              $(users) >>TRIAGE__$(hostname).txt
-
-echo Timezone:                 $(cat /etc/timezone) >>TRIAGE__$(hostname).txt
-
+# echo "OS Name:              "$(uname -a) >>TRIAGE__$(hostname).txt
+# echo "OS Name:              " $(uname -a)
 
 # echo uptime >>TRIAGE__$(hostname).txt
-echo Uptime:              $(uptime) >>TRIAGE__$(hostname).txt
-
-echo "<======== /etc/hosts ========>">> TRIAGE__$(hostname).txt
-echo $(cat /etc/hosts >> TRIAGE__$(hostname).txt)
+# write_output "uptime -p" "$triage_file"
 
 
-echo "<======== ifconfig ========>">> TRIAGE__$(hostname).txt
-echo $(ifconfig |grep 'inet' >> TRIAGE__$(hostname).txt)
 
-echo "<======== netstat -nat ========>" >>TRIAGE__$(hostname).txt
-netstat -nat | grep "tcp"  >>TRIAGE__$(hostname).txt
+write_output "cat /etc/hosts" "$triage_file"
 
-echo "<======== netstat -rn ========>" >> TRIAGE__$(hostname).txt
-echo $(netstat -rn >> TRIAGE__$(hostname).txt)
+write_output "ifconfig |grep 'inet'" "$triage_file"
 
-echo "<======== arp -a: ========>" >>TRIAGE__$(hostname).txt
-arp -a >>TRIAGE__$(hostname).txt
+write_output "ip addr |grep 'inet'" "$triage_file"
 
-echo "<======== lsof -i ========>" >> TRIAGE__$(hostname).txt
-lsof -i >> TRIAGE__$(hostname).txt
-# echo $(lsof -i) >> TRIAGE__$(hostname).txt
+write_output "netstat -nat | grep 'tcp'" "$triage_file"
 
+# write_output "netstat -i" "$triage_file"	# test
 
-echo "<======== who -a ========> " >> TRIAGE__$(hostname).txt
-echo $(who '-a' >> TRIAGE__$(hostname).txt)
+write_output "netstat -rn" "$triage_file"
 
-echo "<======== w ========> " >> TRIAGE__$(hostname).txt
-echo $(w >> TRIAGE__$(hostname).txt)
+write_output "arp -a" "$triage_file"
 
-echo "<======== last ========>" >> TRIAGE__$(hostname).txt
-last >> TRIAGE__$(hostname).txt
-# echo $(last) >> TRIAGE__$(hostname).txt
+write_output "lsof -i" "$triage_file"
 
-echo "<======== env ========> " >> TRIAGE__$(hostname).txt
-echo $(env >> TRIAGE__$(hostname).txt)
+write_output "who '-a'" "$triage_file"
+# echo "<======== who -a ========> " >> TRIAGE__$(hostname).txt
+# echo $(who '-a' >> TRIAGE__$(hostname).txt)
 
-echo "<======== df -h ========> " >> TRIAGE__$(hostname).txt
-df -h >> TRIAGE__$(hostname).txt
+write_output "w" "$triage_file"
+
+write_output "env" "$triage_file"
+
+write_output "df -h" "$triage_file"
 
 
-echo "<======== sudo cat ~/.ssh/authorized_keys ========> " >> TRIAGE__$(hostname).txt
-sudo cat ~/.ssh/authorized_keys >> TRIAGE__$(hostname).txt
+# test me
 
-echo "<======== sudo cat ~/.ssh/known_hosts ========> " >> TRIAGE__$(hostname).txt
-sudo cat ~/.ssh/known_hosts >> TRIAGE__$(hostname).txt
+if crontab -l &>/dev/null; then
+    write_output "crontab -l" "$triage_file"
+else
+    echo "<========   crontab -l &>/dev/null ========>	No crontab for root" >>"$triage_file"
+fi
 
-echo "<======== sudo cat ~/.ssh/config ========> " >> TRIAGE__$(hostname).txt
-sudo cat ~/.ssh/config >> TRIAGE__$(hostname).txt
 
+if command -v hwclock &>/dev/null; then
+    write_output "hwclock -r" "$triage_file"
+else
+    echo "hwclock command not found" >> "$triage_file"
+fi
+
+# Operating System Installation Date
+write_output "df -P /" "$triage_file"
+write_output "ls -l /var/log/installer" "$triage_file"
+write_output "tune2fs -l /dev/sda1" "$triage_file" # Check for correct root partition
+
+
+# Installed Programs
+
+write_output "rpm -qa" "$triage_file"
+
+# System Logs and Usage
+write_output "ls -lah /var/log/" "$triage_file"
+
+# sudo user specific
+
+# Check if the script has root or equivalent privileges
+# if groups | grep -q 'sudo'; then
+if [ "$EUID" -eq 0 ]; then
+# if groups | grep -q '\bsudo\b'; then
+    echo "$(whoami) has sudo privileges"
+    echo "$(whoami) has sudo privileges" >> "$triage_file"
+
+	echo "<======== sudo dmidecode ========> " >TRIAGE__$(hostname)_hardware.txt
+	echo $(sudo dmidecode) >>TRIAGE__$(hostname)_hardware.txt
+	echo "Make:                      " $(sudo dmidecode -s system-manufacturer)
+	echo "Make:                      "	$(sudo dmidecode -s system-manufacturer) >>TRIAGE__$(hostname).txt
+
+	echo "Version:                   " $(sudo dmidecode -s system-version)
+	echo "Version:                   " $(sudo dmidecode -s system-version) >>TRIAGE__$(hostname).txt
+
+	echo "product-name:              " $(dmidecode -s system-product-name)
+	echo "product-name:              " $(dmidecode -s system-product-name) >>TRIAGE__$(hostname).txt
+
+	echo "Serial:                    " $(dmidecode -s system-serial-number)
+	echo "Serial:                    " $(dmidecode -s system-serial-number) >>TRIAGE__$(hostname).txt
+
+	echo "<======== sudo dmidecode ========>" >> TRIAGE__$(hostname)_dmidecode.txt
+	echo $(sudo dmidecode >> TRIAGE__$(hostname)_dmidecode.txt)
+	# write_output "dmidecode" "$triage_file"
+
+    echo "<======== sudo cat ~/.ssh/authorized_keys ========> " >> TRIAGE__$(hostname).txt
+    sudo cat ~/.ssh/authorized_keys >> TRIAGE__$(hostname).txt
+
+    echo "<======== sudo cat ~/.ssh/known_hosts ========> " >> TRIAGE__$(hostname).txt
+    sudo cat ~/.ssh/known_hosts >> TRIAGE__$(hostname).txt
+
+    echo "<======== sudo cat ~/.ssh/config ========> " >> TRIAGE__$(hostname).txt
+    sudo cat ~/.ssh/config >> TRIAGE__$(hostname).txt
+else
+    echo "$(whoami) isn't root or in SUDO mode" >> "$triage_file"
+    echo "$(whoami) isn't root or in SUDO mode"  
+fi
+ 
+# OS specific commands
+if is_linux; then
+    echo "The system is running Linux."
+	write_output "lsblk -io KTYPE,TYPE,SIZE,MODEL,FSTYPE,UUID,MOUNTPOINT" "$triage_file"
+	write_output "cat /etc/passwd" "$triage_file"
+	write_output "cat /etc/group" "$triage_file"
+	if [ "$EUID" -eq 0 ]; then
+		echo "$(whoami) is root or in SUDO mode" >> "$triage_file"
+		echo "<======== sudo cat /etc/shadow ========> " >> TRIAGE__$(hostname).txt
+		sudo cat /etc/shadow >> TRIAGE__$(hostname).txt
+
+		echo "<======== sudo cat /etc/sudoers ========> " >> TRIAGE__$(hostname).txt
+		sudo cat /etc/sudoers >> TRIAGE__$(hostname).txt
+
+		echo "<======== lshw -class disk ========> " >> TRIAGE__$(hostname).txt
+		sudo lshw -class disk | sed s/'       serial: /Drive Serial Number: /g' | sed s/'       size:/Source data size:/g' | sed s/'       product:/Model:/g'>> TRIAGE__$(hostname).txt
+	else
+		echo "$(whoami) isn't root or in SUDO mode" >> "$triage_file"
+	fi
+elif is_mac; then
+    echo "The system is running macOS."
+	write_output "diskutil ap list" "$triage_file"
+	write_output "security list-keychains" "$triage_file"
+
+else
+    echo "The system is not running Linux or macOS."
+fi
+
+    
+# MACOS specific
+# echo $(diskutil ap list >> TRIAGE__$(hostname).txt)
+# write_output "diskutil ap list" "$triage_file"
+
+# security list-keychains >> TRIAGE__$(hostname).txt
+# write_output "security list-keychains" "$triage_file"
+
+
+
+# output is too big, stick at the bottom
+
+write_output "last" "$triage_file"
+write_output "lshw -short" "$triage_file"
+
+# Hardware Information
+write_output "lspci" "$triage_file"
+
+
+echo "<======== journalctl ========> " >TRIAGE__$(hostname)_journalctl.txt
+echo $(journalctl) >>TRIAGE__$(hostname)_journalctl.txt
+# write_output "journalctl" "$triage_file"
+
+
+write_output "dpkg -l" "$triage_file" # Replaced 'apt' with 'dpkg -l'   # installed programs
+
+
+# echo "<======== cat ~/.bash_history | nl ========> " > TRIAGE__$(hostname)_bash_history.txt
+# cat ~/.bash_history | nl >> TRIAGE__$(hostname)_bash_history.txt
+
+for user_home in /home/*; do
+    username=$(basename "$user_home")
+    echo "$username" >>"$triage_file"
+    
+    if [ -f "$user_home/.bash_history" ]; then
+        write_output "cat $user_home/.bash_history" "$triage_file"
+    else
+        echo "No .bash_history for $username" >> "$triage_file"
+    fi
+    
+    if [ -f "$user_home/.zsh_history" ]; then
+        write_output "cat $user_home/.zsh_history" "$triage_file"
+    else
+        echo "No .zsh_history for $username" >> "$triage_file"
+    fi
+    
+    write_output "cat $user_home/.local/share/recently-used.xbel" "$triage_file"
+done
 
 echo "<======== arp -an ========>" >> TRIAGE__$(hostname)_arp_an.txt
 echo $(arp -an >> TRIAGE__$(hostname)_arp_an.txt)
+# write_output "arp -an" "$triage_file"
 
-echo "<======== netstat -an ========>" >> TRIAGE__$(hostname)_netstat_an.txt
-echo $(netstat -an >> TRIAGE__$(hostname)_netstat_an.txt)
+# echo "<======== netstat -an ========>" >> TRIAGE__$(hostname)_netstat_an.txt
+# echo $(netstat -an >> TRIAGE__$(hostname)_netstat_an.txt)
+write_output "netstat -an" "$triage_file"
 
+# write_output "lsof" "$triage_file"
 echo "<======== lsof ========> " > TRIAGE__$(hostname)_lsof.txt
 echo $(lsof >> TRIAGE__$(hostname)_lsof.txt)
 
-echo "<======== ps aux ========> " > TRIAGE__$(hostname)_ps_aux.txt
-echo $(ps aux >> TRIAGE__$(hostname)_ps_aux.txt)
-
-echo "<======== cat ~/.bash_history | nl ========> " > TRIAGE__$(hostname)_bash_history.txt
-cat ~/.bash_history | nl >> TRIAGE__$(hostname)_bash_history.txt
+write_output "ps aux" "$triage_file"
 
 
-# MACOS specific
-echo $(diskutil ap list >> TRIAGE__$(hostname).txt)
-
-security list-keychains >> TRIAGE__$(hostname).txt
-
-
-# Linux specific
-echo "<======== lsblk -io KTYPE,TYPE,SIZE,MODEL,FSTYPE,UUID,MOUNTPOINT ========> " >> TRIAGE__$(hostname).txt
-$(lsblk -io KTYPE,TYPE,SIZE,MODEL,FSTYPE,UUID,MOUNTPOINT) >> TRIAGE__$(hostname).txt
-
-echo "<======== cat /etc/passwd ========> " >> TRIAGE__$(hostname).txt
-cat /etc/passwd >> TRIAGE__$(hostname).txt
-
-echo "<======== sudo cat /etc/shadow ========> " >> TRIAGE__$(hostname).txt
-sudo cat /etc/shadow >> TRIAGE__$(hostname).txt
-
-echo "<======== sudo cat /etc/sudoers ========> " >> TRIAGE__$(hostname).txt
-sudo cat /etc/sudoers >> TRIAGE__$(hostname).txt
-
-echo "<======== cat /etc/group ========> " >> TRIAGE__$(hostname).txt
-cat /etc/group >> TRIAGE__$(hostname).txt
-
-
-
-echo "<======== lshw -class disk ========> " >> TRIAGE__$(hostname).txt
-sudo lshw -class disk | sed s/'       serial: /Drive Serial Number: /g' | sed s/'       size:/Source data size:/g' | sed s/'       product:/Model:/g'>> TRIAGE__$(hostname).txt
-
-
-
-echo "<======== Done! Files are located in your working directory. ========> "
-echo "EndTime:                   " $(date) >> TRIAGE__$(hostname).txt
+echo "<======== Done! See $triage_file. ========> "
+echo "TriageEndTime:                   " $(date) >> TRIAGE__$(hostname).txt
 
 echo "<======== The End ========>" >> TRIAGE__$(hostname).txt
 
@@ -137,7 +291,7 @@ echo "<======== The End ========>" >> TRIAGE__$(hostname).txt
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<      Copyright        >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-# Copyright (C) 2022 LincolnLandForensics
+# Copyright (C) 2023 LincolnLandForensics
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2, as published by the
@@ -147,4 +301,5 @@ echo "<======== The End ========>" >> TRIAGE__$(hostname).txt
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 # details (http://www.gnu.org/licenses/gpl.txt).
+
 
