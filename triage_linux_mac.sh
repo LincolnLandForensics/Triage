@@ -66,29 +66,17 @@ echo "SystemStartupTime:         " $(uptime -s) >>TRIAGE__$(hostname).txt
 # OS detection
 if is_linux; then
     echo "OS System:                  Linux"
-	write_output "hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'" "$triage_file"
-	# hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g' >>TRIAGE__$(hostname).txt
+	# write_output "hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'" "$triage_file"	# todo
+	hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g' >>TRIAGE__$(hostname).txt
 	hostnamectl | grep 'Operating System' | sed 's/  Operating System: /OS Name: /g'
 
 elif is_mac; then
     echo "OS System:                  macOS."
 	write_output "sw_vers" "$triage_file"
 else
+
     echo "The system is not running Linux or macOS."
 fi
-
-# MAC OS
-# echo "<======== sw_vers ========>" >> TRIAGE__$(hostname).txt
-# sw_vers >>TRIAGE__$(hostname).txt
-# write_output "sw_vers" "$triage_file"
-
-
-# echo "OS Name:              "$(uname -a) >>TRIAGE__$(hostname).txt
-# echo "OS Name:              " $(uname -a)
-
-# echo uptime >>TRIAGE__$(hostname).txt
-# write_output "uptime -p" "$triage_file"
-
 
 
 write_output "cat /etc/hosts" "$triage_file"
@@ -97,19 +85,11 @@ write_output "ifconfig |grep 'inet'" "$triage_file"
 
 write_output "ip addr |grep 'inet'" "$triage_file"
 
-write_output "netstat -nat | grep 'tcp'" "$triage_file"
-
-# write_output "netstat -i" "$triage_file"	# test
-
-write_output "netstat -rn" "$triage_file"
-
 write_output "arp -a" "$triage_file"
 
 write_output "lsof -i" "$triage_file"
 
-write_output "who '-a'" "$triage_file"
-# echo "<======== who -a ========> " >> TRIAGE__$(hostname).txt
-# echo $(who '-a' >> TRIAGE__$(hostname).txt)
+write_output "who '-a'" "$triage_file"	#test
 
 write_output "w" "$triage_file"
 
@@ -143,9 +123,6 @@ write_output "tune2fs -l /dev/sda1" "$triage_file" # Check for correct root part
 
 write_output "rpm -qa" "$triage_file"
 
-# System Logs and Usage
-write_output "ls -lah /var/log/" "$triage_file"
-
 # sudo user specific
 
 # Check if the script has root or equivalent privileges
@@ -155,24 +132,6 @@ if [ "$EUID" -eq 0 ]; then
     echo "$(whoami) has sudo privileges"
     echo "$(whoami) has sudo privileges" >> "$triage_file"
 
-	echo "<======== sudo dmidecode ========> " >TRIAGE__$(hostname)_hardware.txt
-	echo $(sudo dmidecode) >>TRIAGE__$(hostname)_hardware.txt
-	echo "Make:                      " $(sudo dmidecode -s system-manufacturer)
-	echo "Make:                      "	$(sudo dmidecode -s system-manufacturer) >>TRIAGE__$(hostname).txt
-
-	echo "Version:                   " $(sudo dmidecode -s system-version)
-	echo "Version:                   " $(sudo dmidecode -s system-version) >>TRIAGE__$(hostname).txt
-
-	echo "product-name:              " $(dmidecode -s system-product-name)
-	echo "product-name:              " $(dmidecode -s system-product-name) >>TRIAGE__$(hostname).txt
-
-	echo "Serial:                    " $(dmidecode -s system-serial-number)
-	echo "Serial:                    " $(dmidecode -s system-serial-number) >>TRIAGE__$(hostname).txt
-
-	echo "<======== sudo dmidecode ========>" >> TRIAGE__$(hostname)_dmidecode.txt
-	echo $(sudo dmidecode >> TRIAGE__$(hostname)_dmidecode.txt)
-	# write_output "dmidecode" "$triage_file"
-
     echo "<======== sudo cat ~/.ssh/authorized_keys ========> " >> TRIAGE__$(hostname).txt
     sudo cat ~/.ssh/authorized_keys >> TRIAGE__$(hostname).txt
 
@@ -181,6 +140,26 @@ if [ "$EUID" -eq 0 ]; then
 
     echo "<======== sudo cat ~/.ssh/config ========> " >> TRIAGE__$(hostname).txt
     sudo cat ~/.ssh/config >> TRIAGE__$(hostname).txt
+	
+	if is_linux; then
+		echo "<======== sudo dmidecode ========> " >TRIAGE__$(hostname)_hardware.txt	#NotMacOS
+		echo $(sudo dmidecode) >>TRIAGE__$(hostname)_hardware.txt		#NotMacOS#
+		echo "Make:                      " $(sudo dmidecode -s system-manufacturer)
+		echo "Make:                      "	$(sudo dmidecode -s system-manufacturer) >>TRIAGE__$(hostname).txt		#NotMacOS
+
+		echo "Version:                   " $(sudo dmidecode -s system-version)
+		echo "Version:                   " $(sudo dmidecode -s system-version) >>TRIAGE__$(hostname).txt		#NotMacOS
+
+		echo "product-name:              " $(dmidecode -s system-product-name)
+		echo "product-name:              " $(dmidecode -s system-product-name) >>TRIAGE__$(hostname).txt		#NotMacOS
+
+		echo "Serial:                    " $(dmidecode -s system-serial-number)
+		echo "Serial:                    " $(dmidecode -s system-serial-number) >>TRIAGE__$(hostname).txt		#NotMacOS
+
+		echo "<======== sudo dmidecode ========>" >> TRIAGE__$(hostname)_dmidecode.txt
+		echo $(sudo dmidecode >> TRIAGE__$(hostname)_dmidecode.txt)		#NotMacOS
+		# write_output "dmidecode" "$triage_file"
+
 else
     echo "$(whoami) isn't root or in SUDO mode" >> "$triage_file"
     echo "$(whoami) isn't root or in SUDO mode"  
@@ -189,9 +168,15 @@ fi
 # OS specific commands
 if is_linux; then
     echo "The system is running Linux."
+
 	write_output "lsblk -io KTYPE,TYPE,SIZE,MODEL,FSTYPE,UUID,MOUNTPOINT" "$triage_file"
 	write_output "cat /etc/passwd" "$triage_file"
 	write_output "cat /etc/group" "$triage_file"
+	
+	# echo "<======== journalctl ========> " >TRIAGE__$(hostname)_journalctl.txt	# too big
+	# echo $(journalctl) >>TRIAGE__$(hostname)_journalctl.txt	#NotMacOS
+	# write_output "journalctl" "$triage_file"	#NotMacOS
+
 	if [ "$EUID" -eq 0 ]; then
 		echo "$(whoami) is root or in SUDO mode" >> "$triage_file"
 		echo "<======== sudo cat /etc/shadow ========> " >> TRIAGE__$(hostname).txt
@@ -207,6 +192,7 @@ if is_linux; then
 	fi
 elif is_mac; then
     echo "The system is running macOS."
+	echo "Uptime:                    " $(uptime) >>TRIAGE__$(hostname).txt
 	write_output "diskutil ap list" "$triage_file"
 	write_output "security list-keychains" "$triage_file"
 
@@ -226,17 +212,21 @@ fi
 
 # output is too big, stick at the bottom
 
+
+# System Logs and Usage
+write_output "ls -lah /var/log/" "$triage_file"
+
+write_output "netstat -nat | grep 'tcp'" "$triage_file"
+
+# write_output "netstat -i" "$triage_file"	# test
+
+write_output "netstat -rn" "$triage_file"
+
 write_output "last" "$triage_file"
 write_output "lshw -short" "$triage_file"
 
 # Hardware Information
 write_output "lspci" "$triage_file"
-
-
-echo "<======== journalctl ========> " >TRIAGE__$(hostname)_journalctl.txt
-echo $(journalctl) >>TRIAGE__$(hostname)_journalctl.txt
-# write_output "journalctl" "$triage_file"
-
 
 write_output "dpkg -l" "$triage_file" # Replaced 'apt' with 'dpkg -l'   # installed programs
 
